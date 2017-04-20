@@ -149,3 +149,18 @@ def parseInRange(startDate="01/01/2017", endDate="12/31/2017"):
 
 # Parse a 2017's
 parseInRange()
+
+
+#''' REMOVE THIS WHEN I WANT TO USE ON IT'S OWN
+parser = argparse.ArgumentParser()
+parser.add_argument("date", help="Date of the page you want parsed, is the following format mm/dd/yyyy",
+                    type=str)
+args = parser.parse_args()
+
+#parse(args.date)
+print args.date
+parseInRange(args.date)
+#writeMatchesToFile(args.date)
+
+#cleanUpTeamName('Querétaro')
+#'''
