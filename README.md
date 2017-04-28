@@ -8,3 +8,8 @@ to gather the match outcome, and turns the data into JSON format.
 For a set of matches the page looks like:
 ![ESPN April 15-17 2017](img/espnScreenShoot.png)
 
+
+The output (output data will be saved in [Data file])(Data)for the page above looks like the following in json.
+
+[Data from April 15-17 2017](data-2017-04-16_to_2017-04-15.json)
+
