@@ -1,0 +1,128 @@
+{
+  "s\u00e1bado, 15 abril": [
+    {
+      "home": {
+        "score": "1",
+        "name": "Chiapas",
+        "result": "Loss"
+      },
+      "away": {
+        "score": "2",
+        "name": "Tijuana",
+        "result": "Win"
+      }
+    },
+    {
+      "home": {
+        "score": "1",
+        "name": "Atlas",
+        "result": "tie"
+      },
+      "away": {
+        "score": "1",
+        "name": "Santos",
+        "result": "tie"
+      }
+    },
+    {
+      "home": {
+        "score": "1",
+        "name": "Morelia",
+        "result": "Loss"
+      },
+      "away": {
+        "score": "2",
+        "name": "Le\u00f3n",
+        "result": "Win"
+      }
+    },
+    {
+      "home": {
+        "score": "4",
+        "name": "U.A.N.L",
+        "result": "Win"
+      },
+      "away": {
+        "score": "0",
+        "name": "Pumas UNAM",
+        "result": "Loss"
+      }
+    },
+    {
+      "home": {
+        "score": "0",
+        "name": "Veracruz",
+        "result": "Loss"
+      },
+      "away": {
+        "score": "1",
+        "name": "Necaxa",
+        "result": "Win"
+      }
+    },
+    {
+      "home": {
+        "score": "0",
+        "name": "Pachuca",
+        "result": "tie"
+      },
+      "away": {
+        "score": "0",
+        "name": "Guadalajara",
+        "result": "tie"
+      }
+    },
+    {
+      "home": {
+        "score": "1",
+        "name": "Am\u00e9rica",
+        "result": "Win"
+      },
+      "away": {
+        "score": "0",
+        "name": "Quer\u00e9taro",
+        "result": "Loss"
+      }
+    }
+  ],
+  "viernes, 21 abril": [
+    {
+      "home": {
+        "score": "2",
+        "name": "Tijuana",
+        "result": "Win"
+      },
+      "away": {
+        "score": "0",
+        "name": "Toluca",
+        "result": "Loss"
+      }
+    }
+  ],
+  "domingo, 16 abril": [
+    {
+      "home": {
+        "score": "1",
+        "name": "Toluca",
+        "result": "tie"
+      },
+      "away": {
+        "score": "1",
+        "name": "Monterrey",
+        "result": "tie"
+      }
+    },
+    {
+      "home": {
+        "score": "2",
+        "name": "Puebla",
+        "result": "Win"
+      },
+      "away": {
+        "score": "1",
+        "name": "Cruz Azul",
+        "result": "Loss"
+      }
+    }
+  ]
+}
