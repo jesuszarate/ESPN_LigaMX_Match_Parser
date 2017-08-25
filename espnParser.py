@@ -73,19 +73,17 @@ def parseMatch(lines):
             score = line.contents[0].find_all("span", {"class": "record"})[0].find_all("a")[0].text.split(' - ')
             stats_link = line.contents[2].contents[0].attrs['href']
 
-            stats_cont = getStatsContainer(urlparse.urljoin(base_url, stats_link))
+            h_stats, a_stats = getStatsContainer(urlparse.urljoin(base_url, stats_link))
 
-            #what = stats_cont.contents[0].find_all("div", {"content"})
-            #what = stats_cont.find_all("class", {"div": "stat-list"})
             homeRes, awayRes = getMatchResult(score)
 
 
             if len(score) > 1:
-                gameObj = {'home': {'name': home, 'score': score[0], 'result': homeRes },
-                           'away': {'name': away, 'score': score[1], 'result': awayRes }}
+                gameObj = {'home': {'name': home, 'score': score[0], 'result': homeRes, 'stats' : h_stats },
+                           'away': {'name': away, 'score': score[1], 'result': awayRes, 'stats' : a_stats }}
             else:
-                gameObj = {'home': {'name': home, 'score': 0, 'result': "tie" },
-                           'away': {'name': away, 'score': 0, 'result': "tie"}}
+                gameObj = {'home': {'name': home, 'score': 0, 'result': "tie", 'stats' : h_stats},
+                           'away': {'name': away, 'score': 0, 'result': "tie", 'stats' : a_stats}}
 
             matches.append(gameObj)
         except:
@@ -108,13 +106,19 @@ def getStatsContainer(url):
     stats = soup.findAll("table")
 
     label = 0
+    h_stats = []
+    a_stats = []
     for row in stats[0].findAll("tr")[1:]:
 
         home = row.contents[fouls_committed_home].contents[fouls_committed]
         away = row.contents[fouls_committed_away].contents[fouls_committed]
 
-        print (labels[label] + " \t home: " + home + ", away: " + away)
+        h_stats.append(home)
+        a_stats.append(away)
+        #print (labels[label] + " \t home: " + home + ", away: " + away)
         label += 1
+
+    return (h_stats, a_stats)
 
 
 def getPageScheduleContainer(date):
@@ -169,7 +173,13 @@ def toCSVDataFormat(data):
             awayResult = match['away']['result']
 
             features += date.replace(',', '') + delim + cleanUpTeamName(match['home']['name']) + delim + cleanUpTeamName(match['away']['name']) + \
-                   delim + getFTR(homeResult) + delim + homeResult + delim + awayResult + '\n'
+                   delim + getFTR(homeResult) + delim + homeResult + delim + awayResult
+            for stat in match['home']['stats']:
+                features += delim + stat
+            for stat in match['away']['stats']:
+                features += delim + stat
+            features += '\n'
+
     return features
 
 def writeToCSV(data, outputName):
