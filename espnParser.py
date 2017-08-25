@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 from lxml import html
 from bs4 import BeautifulSoup
 import requests
@@ -6,11 +7,19 @@ import argparse
 import json
 import re
 import datetime
+import urlparse
+
+base_url = 'http://espndeportes.espn.com/'
+fouls_committed = 0
+fouls_committed_home = 1
+fouls_committed_away = 5
+labels = ['fouls', 'yellow_cards', 'red_cards', 'off_sides', 'corners', 'saves']
+
 
 def parseDate(date):
     if date is not None:
 
-        print date
+        print (date)
         darr = ''
         if '/' in date:
             darr = date.split('/')
@@ -25,6 +34,14 @@ def getMatchResult(score):
         return ["Loss", "Win"]
     else:
         return ["tie", "tie"]
+
+def getFTR(homeResult):
+    if homeResult == 'Win':
+        return 'H'
+    elif homeResult == 'Loss':
+        return 'A'
+    else:
+        return 'D'
 
 def parseScheduleContainer(date):
     scheduleContainer = getPageScheduleContainer(date)
@@ -54,8 +71,14 @@ def parseMatch(lines):
             home = line.contents[0].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
             away = line.contents[1].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
             score = line.contents[0].find_all("span", {"class": "record"})[0].find_all("a")[0].text.split(' - ')
+            stats_link = line.contents[2].contents[0].attrs['href']
 
+            stats_cont = getStatsContainer(urlparse.urljoin(base_url, stats_link))
+
+            #what = stats_cont.contents[0].find_all("div", {"content"})
+            #what = stats_cont.find_all("class", {"div": "stat-list"})
             homeRes, awayRes = getMatchResult(score)
+
 
             if len(score) > 1:
                 gameObj = {'home': {'name': home, 'score': score[0], 'result': homeRes },
@@ -66,21 +89,43 @@ def parseMatch(lines):
 
             matches.append(gameObj)
         except:
+            e = sys.exc_info()[0]
             print "There was a problem!"
+            print e
     return matches
+
+
+def getSoup(url):
+    r = requests.get(url)
+
+    soup = BeautifulSoup(r.content, "lxml")
+
+    return soup
+
+def getStatsContainer(url):
+    soup = getSoup(url)
+
+    stats = soup.findAll("table")
+
+    label = 0
+    for row in stats[0].findAll("tr")[1:]:
+
+        home = row.contents[fouls_committed_home].contents[fouls_committed]
+        away = row.contents[fouls_committed_away].contents[fouls_committed]
+
+        print (labels[label] + " \t home: " + home + ", away: " + away)
+        label += 1
 
 
 def getPageScheduleContainer(date):
     if date is None:
         return None
     date = parseDate(date)
-    url = 'http://espndeportes.espn.com/futbol/fixtures/_/fecha/' + date + '/liga/mex.1'
+    url =  urlparse.urljoin(base_url, '/futbol/fixtures/_/fecha/' + date + '/liga/mex.1')
     print 'fetching data from...'
     print url
 
-    r = requests.get(url)
-
-    soup = BeautifulSoup(r.content, "lxml")
+    soup = getSoup(url)
 
     scheduleContainer = soup.findAll("div", {"id" : "sched-container"})
 
@@ -110,9 +155,28 @@ def writeToFile(lines):
             f.write(line.encode('utf8'))
     print 'Information saved to ' + file
 
-def writeToJsonFile(matches):
-    with open('data.json', 'w') as outfile:
+def writeToJsonFile(matches, outputName):
+    with open(outputName + ".json", "w") as outfile:
         json.dump(matches, outfile)
+
+def toCSVDataFormat(data):
+    features = 'date, home, away, FTR, home_score, away_score, h_fouls, h_yellow_cards, h_red_cards, h_off_sides, ' \
+               'h_corners, h_saves, a_fouls, a_yellow_cards, a_red_cards, a_off_sides, a_corners, a_saves\n'
+    delim = ','
+    for date, matches in data.items():
+        for match in matches:
+            homeResult = match['home']['result']
+            awayResult = match['away']['result']
+
+            features += date.replace(',', '') + delim + cleanUpTeamName(match['home']['name']) + delim + cleanUpTeamName(match['away']['name']) + \
+                   delim + getFTR(homeResult) + delim + homeResult + delim + awayResult + '\n'
+    return features
+
+def writeToCSV(data, outputName):
+    d = toCSVDataFormat(data)
+    with open(outputName + '.csv','wb') as file:
+        for line in d:
+            file.write(line.encode('ascii', 'ignore'))
 
 # Needed for some unicode characters from mexican teams
 def cleanUpTeamName(teamName):
@@ -141,26 +205,38 @@ def parseInRange(startDate="01/01/2017", endDate="12/31/2017"):
         matches.update(parseScheduleContainer(day))
         startDate += delta
 
-    writeToJsonFile(matches)
+    print str(startDate).split(',')
+    writeToJsonFile(matches, "data-" + str(startDate).encode('ascii', 'ignore') + "_to_" + str(endDate))
+    writeToCSV(matches, "data-" + str(startDate) + "_to_" + str(endDate))
     return matches
 
 
-#parseInRange("01/01/2017", "02/05/2017")
+parseInRange("04/15/2017", "04/15/2017")
 
 # Parse a 2017's
-parseInRange()
+#parseInRange()
 
-
-#''' REMOVE THIS WHEN I WANT TO USE ON IT'S OWN
+'''
+import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("date", help="Date of the page you want parsed, is the following format mm/dd/yyyy",
-                    type=str)
+parser.add_argument("--date1", help="increase output verbosity")
+args = parser.parse_args()
+if args.verbosity:
+    print "verbosity turned on"
+'''
+
+''' REMOVE THIS WHEN I WANT TO USE ON IT'S OWN 
+parser = argparse.ArgumentParser()
+parser.add_argument("date", help="Date of the page you want parsed, is the following format mm/dd/yyyy")
+parser.add_argument("--Y", help="Year")
+
 args = parser.parse_args()
 
+print len(args)
 #parse(args.date)
-print args.date
+#print args.date
 parseInRange(args.date)
 #writeMatchesToFile(args.date)
-
+'''
 #cleanUpTeamName('Querétaro')
-#'''
+
