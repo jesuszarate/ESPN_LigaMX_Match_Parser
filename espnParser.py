@@ -62,18 +62,26 @@ def parseScheduleContainer(date):
 
 def parseMatch(lines):
     matches = []
+    verbose = False
     for line in lines:
         try:
-            print line.contents[0].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text + ' ' + \
-                  line.contents[0].find_all("span", {"class": "record"})[0].find_all("a")[0].text + ' ' + \
-                  line.contents[1].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
+            if verbose:
+                print line.contents[0].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text + ' ' + \
+                    line.contents[0].find_all("span", {"class": "record"})[0].find_all("a")[0].text + ' ' + \
+                    line.contents[1].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
 
             home = line.contents[0].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
             away = line.contents[1].find_all("a", {"class": "team-name"})[0].find_all("span")[0].text
             score = line.contents[0].find_all("span", {"class": "record"})[0].find_all("a")[0].text.split(' - ')
             stats_link = line.contents[2].contents[0].attrs['href']
 
-            h_stats, a_stats = getStatsContainer(urlparse.urljoin(base_url, stats_link))
+            #print('/futbol/reporte?juegoId=469913'.split('='))
+            if len(stats_link.split('=')) == 2:
+                match_id = stats_link.split('=')[1]
+                url = urlparse.urljoin(base_url, '/futbol/numeritos?juegoId='+ match_id)
+                h_stats, a_stats = getStatsContainer(url)
+            else:
+                h_stats, a_stats = getStatsContainer(urlparse.urljoin(base_url, stats_link))
 
             homeRes, awayRes = getMatchResult(score)
 
@@ -113,8 +121,8 @@ def getStatsContainer(url):
         home = row.contents[fouls_committed_home].contents[fouls_committed]
         away = row.contents[fouls_committed_away].contents[fouls_committed]
 
-        h_stats.append(home)
-        a_stats.append(away)
+        h_stats.append(home if home.isdigit() else 0)
+        a_stats.append(away if away.isdigit() else 0)
         #print (labels[label] + " \t home: " + home + ", away: " + away)
         label += 1
 
@@ -164,20 +172,21 @@ def writeToJsonFile(matches, outputName):
         json.dump(matches, outfile)
 
 def toCSVDataFormat(data):
-    features = 'date, home, away, FTR, home_score, away_score, h_fouls, h_yellow_cards, h_red_cards, h_off_sides, ' \
-               'h_corners, h_saves, a_fouls, a_yellow_cards, a_red_cards, a_off_sides, a_corners, a_saves\n'
+    features = 'date,home,away,FTR,home_score,away_score,h_fouls,h_yellow_cards,h_red_cards,h_off_sides,' \
+               'h_corners,h_saves,a_fouls,a_yellow_cards,a_red_cards,a_off_sides,a_corners,a_saves\n'
     delim = ','
     for date, matches in data.items():
         for match in matches:
-            homeResult = match['home']['result']
-            awayResult = match['away']['result']
+            homeResult = match['home']['score']
+            awayResult = match['away']['score']
 
             features += date.replace(',', '') + delim + cleanUpTeamName(match['home']['name']) + delim + cleanUpTeamName(match['away']['name']) + \
-                   delim + getFTR(homeResult) + delim + homeResult + delim + awayResult
-            for stat in match['home']['stats']:
-                features += delim + stat
-            for stat in match['away']['stats']:
-                features += delim + stat
+                   delim + getFTR(match['home']['result']) + delim + homeResult + delim + awayResult
+
+            for stat in match['home']['stats'][:6]:
+                features += delim + str(stat)
+            for stat in match['away']['stats'][:6]:
+                features += delim + str(stat)
             features += '\n'
 
     return features
@@ -194,7 +203,10 @@ def cleanUpTeamName(teamName):
         if teamName.startswith('Q'):
             return 'Queretaro'
         if teamName.startswith('L'):
-            return 'Leon'
+            if teamName.endswith('n'):
+                return 'Leon'
+            else:
+                return 'Lobos'
     return teamName
 
 
@@ -221,7 +233,9 @@ def parseInRange(startDate="01/01/2017", endDate="12/31/2017"):
     return matches
 
 
-parseInRange("04/15/2017", "04/15/2017")
+#parseInRange("04/15/2017", "08/25/2017")
+parseInRange("08/18/2017", "08/18/2017")
+#parseInRange("04/30/2017", "04/30/2017")
 
 # Parse a 2017's
 #parseInRange()
